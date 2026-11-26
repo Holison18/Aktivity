@@ -35,14 +35,29 @@ async function lookupAdminRow(userId: string): Promise<{ email: string } | null>
 export const checkAdmin = cache(async (): Promise<AdminCheck> => {
   const supa = await authClient();
   // getClaims() verifies the JWT locally via cached JWKS (or Auth server if symmetric) and returns `sub`, `email`, and `aal`.
-  const { data } = await supa.auth.getClaims();
-  const claims = data?.claims;
-  if (!claims?.sub) return { ok: false, reason: "signed_out" };
-  if (claims.aal !== "aal2") return { ok: false, reason: "mfa_required" };
-  const row = await lookupAdminRow(claims.sub);
+  const { data, error } = await supa.auth.getClaims();
+  let userId = data?.claims?.sub ?? null;
+  let aal = data?.claims?.aal ?? null;
+  let claimEmail = typeof data?.claims?.email === "string" ? data.claims.email : "";
+
+  // Fallback to GoTrue server verification if local JWKS claim verification errored (e.g. cold start / clock skew).
+  if (!userId && error) {
+    console.warn("checkAdmin getClaims fallback:", error.message);
+    const { data: userData } = await supa.auth.getUser();
+    if (userData?.user) {
+      userId = userData.user.id;
+      claimEmail = userData.user.email ?? "";
+      const { data: aalData } = await supa.auth.mfa.getAuthenticatorAssuranceLevel();
+      aal = aalData?.currentLevel ?? null;
+    }
+  }
+
+  if (!userId) return { ok: false, reason: "signed_out" };
+  if (aal !== "aal2") return { ok: false, reason: "mfa_required" };
+  const row = await lookupAdminRow(userId);
   if (!row) return { ok: false, reason: "not_admin" };
-  const email = typeof claims.email === "string" && claims.email ? claims.email : row.email;
-  return { ok: true, admin: { userId: claims.sub, email } };
+  const email = claimEmail || row.email;
+  return { ok: true, admin: { userId, email } };
 });
 
 /** For pages and server actions: redirects to sign-in unless the caller is a listed admin with MFA. */

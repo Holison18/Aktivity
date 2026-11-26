@@ -4,6 +4,7 @@ import LoginForm from "./LoginForm";
 import { APP_NAME } from "@/lib/env";
 import { BrandMark } from "@/components/ui";
 
+export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin sign in" };
 
 export default async function AdminLogin(props: PageProps<"/admin/login">) {
@@ -27,7 +28,7 @@ export default async function AdminLogin(props: PageProps<"/admin/login">) {
             </h1>
             <p className="text-sm">Lecturer access only. Enter your email, password, and authenticator code.</p>
           </div>
-          <LoginForm reason={reason} />
+          <LoginForm key={reason ?? "default"} reason={reason} />
         </div>
       </main>
     </div>

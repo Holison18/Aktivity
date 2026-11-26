@@ -5,8 +5,8 @@ import { createServerClient } from "@supabase/ssr";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
   if (!url || !key) return response;
 
   const supabase = createServerClient(url, key, {
@@ -21,8 +21,12 @@ export async function proxy(request: NextRequest) {
   });
   // Verify the JWT locally against cached JWKS (falling back to GoTrue only for symmetric keys
   // or when refreshing an expiring token) instead of making an Auth HTTP round-trip on every click.
-  const { data } = await supabase.auth.getClaims();
-  const authed = !!data?.claims?.sub;
+  const { data, error } = await supabase.auth.getClaims();
+  let authed = !!data?.claims?.sub;
+  if (!authed && error) {
+    const { data: userData } = await supabase.auth.getUser();
+    authed = !!userData?.user;
+  }
 
   const isLogin = request.nextUrl.pathname.startsWith("/admin/login");
   if (!authed && request.nextUrl.pathname.startsWith("/api/admin")) {

@@ -3,19 +3,19 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Aktivity";
 
 export function supabaseUrl(): string {
-  const v = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const v = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   if (!v) throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set. Copy .env.example to .env.local and fill it in.");
   return v;
 }
 
 export function supabaseAnonKey(): string {
-  const v = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const v = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
   if (!v) throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.");
   return v;
 }
 
 export function serviceRoleKey(): string {
-  const v = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const v = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!v) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set (server environment only).");
   return v;
 }
