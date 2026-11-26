@@ -1,0 +1,543 @@
+@import "tailwindcss";
+
+/* Registered custom properties so the liquid gradient border smoothly pours in and circulates on hover. */
+@property --sheen-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --sheen-spread {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --sheen-alpha {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: false;
+}
+
+/* Education platform visual system: crisp white canvas, soft cool-gray containers (#F6F7F9),
+   electric blue brand accents (#1F7CFF), warm gold highlight badges (#F7DC6F), and charcoal pill CTAs (#141518). */
+:root {
+  --ink: #141518;          /* primary charcoal headings & dark pill buttons */
+  --ink-2: #24272e;        /* primary dark button hover */
+  --body: #5f6672;         /* body copy: WCAG AA on white and soft gray */
+  --muted: #767d8a;        /* small labels, captions, and placeholders */
+  --surface-soft: #f6f7f9; /* soft cool-gray section containers & stat strips */
+  --fill: #f2f4f8;         /* capsules, secondary buttons, input fields */
+  --fill-2: #e8ecf3;       /* secondary hover fill */
+  --line: #eaecf0;         /* crisp hairline borders & dividers */
+  --link-line: #cbd2dc;    /* resting underline of text links */
+  --paper: #ffffff;
+  --on-ink: #ffffff;
+  --dark: #161719;         /* sleek dark footer bar */
+
+  /* Brand & semantic accents */
+  --brand: #1f7cff;        /* primary electric blue accent */
+  --brand-2: #1565e6;      /* hover electric blue */
+  --brand-soft: #eef5ff;   /* soft blue pill/badge tint */
+  --brand-line: #bfdbfe;   /* soft blue outline */
+  --gold: #f7dc6f;         /* warm yellow/gold badge & highlight accent */
+  --gold-ink: #2b2100;
+  --fade-end: #1f7cff;     /* second-line display gradient accent */
+
+  --ok: #15803d;           /* green status mark */
+  --ok-soft: #ecfdf3;
+  --bad: #dc2626;          /* red status mark */
+  --bad-fill: #fef2f2;
+  --bad-ink: #991b1b;
+  --focus: #1f7cff;
+
+  /* Shape: pills for actions & status badges, generous soft curves for cards & panels. */
+  --radius-pill: 999px;
+  --radius-field: 14px;
+  --radius-notice: 16px;
+  --radius-card: 20px;
+  --radius-panel: 24px;
+
+  /* Depth & liquid hover glows */
+  --shadow-raised: 0 1px 2px rgba(16, 24, 40, .04), 0 10px 28px -14px rgba(16, 24, 40, .12);
+  --shadow-float: 0 12px 32px -12px rgba(16, 24, 40, .16), 0 2px 6px rgba(16, 24, 40, .05);
+  --shadow-pill: 0 1px 3px rgba(16, 24, 40, .08);
+  --shadow-marker: 0 1px 4px rgba(0, 0, 0, .4);
+  --ring-field: 0 0 0 4px rgba(31, 124, 255, .14);
+  --spinner-track-on-ink: rgba(255, 255, 255, .3);
+  --nav-hover: rgba(31, 124, 255, .07);
+
+  --shadow-glow: 0 8px 24px -10px rgba(124, 58, 237, .3), 0 4px 16px -8px rgba(239, 68, 68, .24);
+  --shadow-glow-raised: 0 1px 2px rgba(16, 24, 40, .04), 0 14px 30px -12px rgba(124, 58, 237, .28), 0 6px 20px -10px rgba(239, 68, 68, .22);
+  --shadow-press: 0 0 0 4px rgba(124, 58, 237, .16), 0 0 16px -2px rgba(239, 68, 68, .25);
+
+  /* Motion: unhurried liquid circulation on hover, crisp tactile click press. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms;
+  --dur-hover: 170ms;
+  --dur-glide: 650ms;
+  --dur-orbit-btn: 2.8s;
+  --dur-orbit-card: 3.8s;
+  --dur-enter: 200ms;
+
+  --rise: 6px;
+  --lift: -1.5px;
+  --press: 0.95;
+  --press-card: 0.99;
+  --pop: 0.96;
+  --soften: 4px;
+
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-fill: var(--fill);
+  --color-fill-2: var(--fill-2);
+  --color-line: var(--line);
+  --color-paper: var(--paper);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-surface-soft: var(--surface-soft);
+  --color-ok: var(--ok);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
+  }
+  body {
+    background: var(--paper);
+    color: var(--body);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    line-height: 1.55;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  strong, b { color: var(--ink); font-weight: 600; }
+  p, li, dd { text-wrap: pretty; }
+  ::selection { background: var(--brand); color: var(--on-ink); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+  button, [role="button"], a, label, summary { touch-action: manipulation; }
+}
+
+@layer components {
+  .display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  .fade-line {
+    background: linear-gradient(90deg, var(--ink) 0%, var(--fade-end) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .label {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  /* Status badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.25rem 0.7rem; border-radius: var(--radius-pill);
+    font-size: 0.74rem; font-weight: 600; line-height: 1.25; white-space: nowrap;
+  }
+  .badge-gold { background: var(--gold); color: var(--gold-ink); }
+  .badge-blue { background: var(--brand-soft); color: var(--brand-2); border: 1px solid var(--brand-line); }
+  .badge-ok { background: var(--ok-soft); color: var(--ok); }
+  .badge-neutral { background: var(--surface-soft); color: var(--body); border: 1px solid var(--line); }
+
+  /* ------------------------------------------------------------- buttons */
+  .btn {
+    --surface: var(--brand);
+    --border-base: var(--brand);
+    position: relative; overflow: hidden;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+    min-height: 46px; padding: 0 1.55rem; border-radius: var(--radius-pill);
+    border: 2.5px solid transparent;
+    background:
+      linear-gradient(var(--surface), var(--surface)) padding-box,
+      conic-gradient(
+        from var(--sheen-angle),
+        transparent 0deg,
+        rgb(124 58 237 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.16),
+        rgb(192 38 211 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.42),
+        rgb(248 250 252 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.56),
+        rgb(244 63 94 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.72),
+        rgb(239 68 68 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.88),
+        transparent var(--sheen-spread),
+        transparent 360deg
+      ) border-box,
+      linear-gradient(var(--border-base), var(--border-base)) border-box;
+    font-weight: 600; font-size: 0.92rem; letter-spacing: -0.005em; line-height: 1.1; white-space: nowrap;
+    cursor: pointer; user-select: none; -webkit-user-select: none;
+    animation: liquid-orbit var(--dur-orbit-btn) linear infinite;
+    animation-play-state: paused;
+    transition:
+      --sheen-spread var(--dur-glide) var(--ease-glide),
+      --sheen-alpha 500ms var(--ease-glide),
+      box-shadow var(--dur-glide) var(--ease-glide),
+      color var(--dur-hover) var(--ease-out),
+      opacity var(--dur-hover) var(--ease-out),
+      transform var(--dur-glide) var(--ease-glide);
+  }
+  .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      115deg,
+      transparent 20%,
+      rgba(255, 255, 255, .18) 44%,
+      rgba(255, 255, 255, .38) 50%,
+      rgba(255, 255, 255, .14) 56%,
+      transparent 80%
+    );
+    transform: translateX(-130%);
+    transition: transform 950ms var(--ease-glide);
+  }
+  .btn-secondary::before, .btn-danger::before, .btn-outline-brand::before {
+    background: linear-gradient(
+      115deg,
+      transparent 20%,
+      rgba(31, 124, 255, .08) 44%,
+      rgba(255, 255, 255, .85) 50%,
+      rgba(31, 124, 255, .06) 56%,
+      transparent 80%
+    );
+  }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn[aria-busy="true"]:disabled { opacity: 1; cursor: progress; }
+  .btn svg { flex: none; transition: transform var(--dur-hover) var(--ease-out); }
+  /* Primary button: vibrant electric blue with crisp white text (matches Dribbble primary CTA). */
+  .btn-primary, .btn-brand {
+    --surface: var(--brand);
+    --border-base: var(--brand);
+    color: var(--on-ink);
+  }
+  /* Dark charcoal button option for header/hero CTA pairs. */
+  .btn-dark {
+    --surface: var(--ink);
+    --border-base: var(--ink);
+    color: var(--on-ink);
+  }
+  /* Outlined electric-blue pill button (like secondary Dribbble course buttons). */
+  .btn-outline-brand {
+    --surface: var(--paper);
+    --border-base: var(--brand);
+    color: var(--brand-2);
+  }
+  /* Secondary button: crisp white surface with soft slate border and electric-blue-tinted ink text. */
+  .btn-secondary {
+    --surface: var(--paper);
+    --border-base: #d4dbe6;
+    color: var(--ink);
+  }
+  /* Danger button: soft rose fill with crisp crimson text and border. */
+  .btn-danger {
+    --surface: var(--bad-fill);
+    --border-base: #fca5a5;
+    color: #b91c1c;
+  }
+  .btn-icon {
+    min-width: 46px; width: 46px; height: 46px; padding: 0;
+  }
+  .btn-icon.btn-sm {
+    min-width: 38px; width: 38px; height: 38px; padding: 0;
+  }
+  .cta-pair {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .click-ripple {
+    position: absolute; border-radius: 999px; pointer-events: none;
+    background: radial-gradient(circle, rgba(255, 255, 255, .48) 0%, rgba(192, 38, 211, .28) 45%, rgba(239, 68, 68, .18) 70%, transparent 100%);
+    transform: scale(0); opacity: 0.85;
+    animation: click-ripple 460ms var(--ease-out) forwards;
+  }
+  .btn-secondary .click-ripple, .btn-danger .click-ripple, .btn-outline-brand .click-ripple, .chip .click-ripple {
+    background: radial-gradient(circle, rgba(124, 58, 237, .26) 0%, rgba(239, 68, 68, .2) 55%, transparent 100%);
+  }
+  .btn-link {
+    color: var(--body); text-decoration: underline; text-decoration-color: var(--link-line);
+    text-underline-offset: 4px; min-height: 44px; padding: 0 0.25rem; display: inline-flex; align-items: center;
+    cursor: pointer; font-weight: 500;
+    transition: color var(--dur-hover) var(--ease-out), text-decoration-color var(--dur-hover) var(--ease-out);
+  }
+  .btn-sm { min-height: 38px; padding: 0 1.15rem; font-size: 0.84rem; gap: 0.45rem; }
+
+  .swap { display: inline-grid; gap: inherit; }
+  .swap > * {
+    grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: inherit;
+    transition: opacity var(--dur-hover) var(--ease-out), filter var(--dur-hover) var(--ease-out), transform var(--dur-hover) var(--ease-out);
+  }
+  .swap > [data-on="false"] { opacity: 0; filter: blur(var(--soften)); transform: scale(var(--pop)); }
+
+  /* ------------------------------------------------------------ surfaces */
+  .capsule { background: var(--fill); border-radius: var(--radius-pill); }
+  .surface-soft {
+    background: var(--surface-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+  }
+  .card, .card-raised {
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box,
+      conic-gradient(
+        from var(--sheen-angle),
+        transparent 0deg,
+        rgb(124 58 237 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.16),
+        rgb(192 38 211 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.42),
+        rgb(248 250 252 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.56),
+        rgb(244 63 94 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.72),
+        rgb(239 68 68 / var(--sheen-alpha)) calc(var(--sheen-spread) * 0.88),
+        transparent var(--sheen-spread),
+        transparent 360deg
+      ) border-box,
+      linear-gradient(var(--line), var(--line)) border-box;
+    border: 2px solid transparent;
+    border-radius: var(--radius-card);
+    animation: liquid-orbit var(--dur-orbit-card) linear infinite;
+    animation-play-state: paused;
+    transition:
+      --sheen-spread var(--dur-glide) var(--ease-glide),
+      --sheen-alpha 500ms var(--ease-glide),
+      box-shadow var(--dur-glide) var(--ease-glide),
+      transform var(--dur-glide) var(--ease-glide);
+  }
+  fieldset.card > legend { background: var(--paper); border-radius: 6px; }
+  .card-raised { box-shadow: var(--shadow-raised); }
+  .card-link { display: block; cursor: pointer; }
+
+  /* Navigation links: clean horizontal tabs with electric blue active indicator */
+  .nav-link {
+    position: relative;
+    border-radius: var(--radius-pill);
+    padding: 0.48rem 0.9rem;
+    font-size: 0.88rem;
+    color: var(--body);
+    font-weight: 500;
+    transition: color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out);
+  }
+  .nav-link[aria-current="page"] {
+    color: var(--brand);
+    background: var(--brand-soft);
+    font-weight: 600;
+  }
+  @media (min-width: 640px) { .nav-link { padding: 0.5rem 1rem; } }
+
+  /* --------------------------------------------------------------- fields */
+  .field {
+    width: 100%; min-height: 48px; padding: 0.75rem 1.05rem;
+    background: var(--surface-soft); border: 1.5px solid var(--line); border-radius: var(--radius-field);
+    color: var(--ink); font-weight: 400; font-size: 0.96rem;
+    transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), box-shadow var(--dur-hover) var(--ease-out);
+  }
+  .field:focus, .field:focus-visible { outline: none; border-color: var(--brand); background: var(--paper); box-shadow: var(--ring-field); }
+  .field::placeholder { color: var(--muted); }
+  textarea.field { min-height: 116px; line-height: 1.55; resize: vertical; }
+  select.field { cursor: pointer; }
+  .field-label { display: block; font-size: 0.84rem; color: var(--ink); font-weight: 600; margin-bottom: 0.5rem; }
+
+  /* ---------------------------------------------------------------- chips */
+  .chip {
+    position: relative; overflow: hidden;
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px;
+    padding: 0 1rem; border-radius: var(--radius-pill); background: var(--surface-soft); color: var(--ink);
+    font-weight: 500; font-size: 0.9rem; border: 1.5px solid var(--line); cursor: pointer;
+    user-select: none; -webkit-user-select: none;
+    transition:
+      background-color var(--dur-hover) var(--ease-out),
+      color var(--dur-hover) var(--ease-out),
+      border-color var(--dur-hover) var(--ease-out),
+      transform var(--dur-press) var(--ease-out);
+  }
+  .chip:active { transform: scale(var(--press)); }
+  .chip.rounded-2xl:active { transform: scale(var(--press-card)); }
+  .chip[aria-pressed="true"], .chip[aria-checked="true"] {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-ink);
+  }
+
+  /* --------------------------------------------------------------- tables */
+  .table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  .table th {
+    text-align: left; font-weight: 600; color: var(--muted); font-size: 0.72rem;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: 0.95rem 1.15rem; background: var(--surface-soft); border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  .table td { padding: 0.95rem 1.15rem; border-bottom: 1px solid var(--line); color: var(--ink); font-weight: 400; vertical-align: middle; }
+  .table tr:last-child td { border-bottom: 0; }
+
+  /* ---------------------------------------------------------------- marks */
+  .mark-ok, .mark-bad { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; font-size: 0.8rem; }
+  .mark-ok { color: var(--ok); }
+  .mark-bad { color: var(--bad); }
+  .mark-ok::before, .mark-bad::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: var(--radius-pill); background: currentColor; flex: none; }
+
+  /* -------------------------------------------------------------- notices */
+  .notice {
+    background: var(--surface-soft); border: 1px solid var(--line);
+    border-radius: var(--radius-notice); padding: 0.9rem 1.1rem; color: var(--ink); font-weight: 400; font-size: 0.92rem;
+    transition: opacity var(--dur-enter) var(--ease-out), transform var(--dur-enter) var(--ease-out);
+  }
+  .notice-bad { background: var(--bad-fill); border-color: #fecaca; color: var(--bad-ink); }
+
+  /* -------------------------------------------------------------- progress */
+  .progress { position: relative; height: 6px; border-radius: 999px; background: var(--fill); overflow: hidden; }
+  .progress > span {
+    position: absolute; inset: 0; border-radius: 999px; background: var(--brand); transform-origin: left;
+    transition: transform var(--dur-enter) var(--ease-out);
+  }
+
+  /* --------------------------------------------------------------- spinner */
+  .spinner {
+    display: inline-block; width: 1rem; height: 1rem; flex: none; border-radius: var(--radius-pill);
+    border: 2px solid var(--line); border-top-color: var(--brand);
+    animation: spin 600ms linear infinite;
+  }
+  .btn-primary .spinner, .btn-brand .spinner { border-color: var(--spinner-track-on-ink); border-top-color: var(--on-ink); width: 0.9rem; height: 0.9rem; }
+
+  /* ---------------------------------------------------------------- entry */
+  .fade-in { transition: opacity var(--dur-enter) var(--ease-out), transform var(--dur-enter) var(--ease-out); }
+
+  .stagger > * { animation: rise var(--dur-enter) var(--ease-out) both; }
+  .stagger > .card,
+  .stagger > .card-raised {
+    animation:
+      rise var(--dur-enter) var(--ease-out) both,
+      liquid-orbit var(--dur-orbit-card) linear infinite paused;
+  }
+  .stagger > :nth-child(2) { animation-delay: 35ms, 0s; }
+  .stagger > :nth-child(3) { animation-delay: 70ms, 0s; }
+  .stagger > :nth-child(4) { animation-delay: 105ms, 0s; }
+  .stagger > :nth-child(5) { animation-delay: 140ms, 0s; }
+  .stagger > :nth-child(n + 6) { animation-delay: 175ms, 0s; }
+
+  .score-pop { animation: pop var(--dur-enter) var(--ease-out) both; }
+
+  /* Hover only where a real pointer hovers; on phones a tap would leave the hover state stuck. */
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover:not(:disabled), .btn-brand:hover:not(:disabled) {
+      --surface: var(--brand-2);
+      --sheen-spread: 280deg;
+      --sheen-alpha: 1;
+      animation-play-state: running;
+      box-shadow: var(--shadow-glow);
+      transform: translateY(var(--lift));
+    }
+    .btn-dark:hover:not(:disabled) {
+      --surface: var(--ink-2);
+      --sheen-spread: 280deg;
+      --sheen-alpha: 1;
+      animation-play-state: running;
+      box-shadow: var(--shadow-glow);
+      transform: translateY(var(--lift));
+    }
+    .btn-outline-brand:hover:not(:disabled) {
+      --surface: var(--brand-soft);
+      --sheen-spread: 280deg;
+      --sheen-alpha: 1;
+      animation-play-state: running;
+      box-shadow: var(--shadow-glow);
+      transform: translateY(var(--lift));
+    }
+    .btn-secondary:hover:not(:disabled) {
+      --surface: var(--brand-soft);
+      color: var(--brand-2);
+      --sheen-spread: 280deg;
+      --sheen-alpha: 1;
+      animation-play-state: running;
+      box-shadow: var(--shadow-glow);
+      transform: translateY(var(--lift));
+    }
+    .btn-danger:hover:not(:disabled) {
+      --surface: #fee2e2;
+      color: #991b1b;
+      --sheen-spread: 280deg;
+      --sheen-alpha: 1;
+      animation-play-state: running;
+      box-shadow: var(--shadow-glow);
+      transform: translateY(var(--lift));
+    }
+    .btn:hover:not(:disabled)::before { transform: translateX(130%); }
+    .btn:hover:not(:disabled) .arrow { transform: translateX(3px); }
+    .btn:hover:not(:disabled) .arrow-ur { transform: translate(2px, -2px); }
+    .btn-link:hover { color: var(--brand); text-decoration-color: currentColor; }
+    .chip:hover:not([aria-pressed="true"]):not([aria-checked="true"]) {
+      background: var(--brand-soft);
+      border-color: var(--brand-line);
+    }
+    .card:hover,
+    .stagger > .card:hover {
+      --sheen-spread: 250deg;
+      --sheen-alpha: 1;
+      animation-play-state: running;
+      box-shadow: var(--shadow-glow);
+    }
+    .card-raised:hover,
+    .stagger > .card-raised:hover {
+      --sheen-spread: 250deg;
+      --sheen-alpha: 1;
+      animation-play-state: running;
+      box-shadow: var(--shadow-glow-raised);
+    }
+    .card-link:hover { transform: translateY(var(--lift)); }
+    .nav-link:hover:not([aria-current="page"]) { color: var(--ink); background: var(--nav-hover); }
+  }
+
+  /* Active states come after hover so clicking while hovered always squashes down crisply. */
+  .btn:active:not(:disabled) {
+    --sheen-spread: 320deg;
+    --sheen-alpha: 1;
+    transform: translateY(1px) scale(var(--press));
+    box-shadow: var(--shadow-press);
+    transition:
+      transform var(--dur-press) var(--ease-out),
+      box-shadow var(--dur-press) var(--ease-out);
+  }
+  .card-link:active { transform: scale(var(--press-card)); transition: transform var(--dur-press) var(--ease-out); }
+}
+
+@starting-style {
+  .fade-in { opacity: 0; transform: translateY(var(--rise)); }
+  .notice { opacity: 0; transform: translateY(calc(var(--rise) * -0.5)); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes rise { from { opacity: 0; transform: translateY(var(--rise)); } }
+@keyframes pop { from { opacity: 0; transform: scale(var(--pop)); filter: blur(var(--soften)); } }
+@keyframes breathe { 50% { opacity: 0.35; } }
+@keyframes click-ripple { to { transform: scale(1); opacity: 0; } }
+@keyframes liquid-orbit { from { --sheen-angle: 0deg; } to { --sheen-angle: 360deg; } }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --rise: 0px; --lift: 0px; --press: 1; --press-card: 1; --pop: 1; --soften: 0px; }
+  html { scroll-behavior: auto; }
+  .btn:hover:not(:disabled) .arrow, .btn:hover:not(:disabled) .arrow-ur { transform: none; }
+  .btn, .card, .card-raised { animation: none; }
+  .btn::before { display: none; }
+  .spinner { animation: breathe 1.2s ease-in-out infinite; }
+}

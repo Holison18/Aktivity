@@ -1,0 +1,8 @@
+# Exclude local-only files, docs, tests, and legacy prototype from Vercel uploads.
+prototype/
+docs/
+tests/
+*.xlsx
+*.docx
+.env*
+!.env.example

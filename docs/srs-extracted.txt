@@ -1,0 +1,452 @@
+Software Requirements Specification: Student Activity Platform
+Nov 23, 2026 · @Nathaniel Klobodu
+1. Introduction
+The platform lets an instructor release up to two activities per week to a class. A student opens them by entering an index number, and only while the time window is open and only from inside the location the instructor chose.
+1.1 Purpose
+This SRS defines what the system must do, the data it keeps, and the limits it works under. It is the single reference for design, build and acceptance testing over the remaining four lessons.
+1.2 Scope
+In scope
+Weekly activity scheduling per class, with a maximum of 2 activities per week.
+Student self-registration and access by index number and class code.
+Access control by time window and by geofence (centre point and radius set by the admin).
+Activity delivery, automatic scoring on the server, and instant score feedback to the student.
+An admin console for classes, rosters, weeks, activities, geofences, live results and Excel export.
+Out of scope for this release
+Student passwords, roster uploads by the admin and email notifications.
+Native mobile apps.
+Proctoring, camera or microphone access.
+Learning management system integration (for example grade sync to a university portal).
+1.3 Definitions
+Term
+Meaning
+Admin
+The instructor who configures classes, weeks and activities and reads results.
+Student
+A person who registers with an index number, a name and a class code, then signs in with the index number.
+Class
+A group of students who share a class code, for example one course offering.
+Week
+A scheduled release of up to 2 activities, with an opening time, a closing time and a geofence.
+Activity
+One task a student completes, such as sorting actions or rating risks. It has a type, a configuration and an answer key.
+Attempt
+One submission of one activity by one student.
+Geofence
+A circle defined by a centre (latitude, longitude) and a radius in metres.
+Window
+The period between a week's opening and closing time.
+RLS
+Row Level Security, the Supabase database feature that restricts which rows a caller can read or write.
+1.4 References
+Next.js App Router documentation.
+Supabase documentation: Postgres, Auth, Row Level Security.
+MDN: Geolocation API (secure context and accuracy fields).
+Data Protection Act, 2012 (Act 843), Ghana, for handling location and identity data. Confirm university policy with the data protection officer before launch.
+2. Overall description
+2.1 Product perspective
+The platform is a new standalone web application built with Next.js and Supabase. It replaces the earlier single-laptop prototype. The three activities from that prototype (CIA sorting, risk rating, password strength) become the first activity types, so existing content carries over.
+2.2 User classes
+User
+Who
+Access
+What they do
+Admin
+The instructor
+Email and password, protected by multi-factor authentication
+Creates classes with class codes, schedules weeks, sets geofences, builds activities, watches live results, exports scores
+Student
+A person who joins a class with its code
+Index number, plus name and class code on the first visit
+Opens the current week's activities from inside the geofence during the window and sees scores at once
+2.3 Operating environment
+Students use a phone or laptop with a current Chrome, Safari, Firefox or Edge. Android Chrome and iOS Safari are the priority.
+The site is served over HTTPS. Browsers only share location on secure pages.
+Students grant the browser location permission when asked.
+The admin console targets a laptop screen and stays usable on a phone.
+All times are stored in UTC and shown in Africa/Accra time, which has no daylight saving.
+2.4 Constraints
+Framework: Next.js (App Router, TypeScript). Database and admin authentication: Supabase.
+A week holds at most 2 activities. The database enforces this, and the interface does not offer a third.
+Roughly four lessons remain, so the first release must be usable in the next lesson and grow week by week.
+Hosting uses free or low-cost tiers. Student pages stay light because many students are on mobile data.
+The minimalist black and white visual language in section 5 applies to every screen.
+2.5 Assumptions and dependencies
+Index numbers are unique within the university. Students type their own index number and name, so the system holds no prepared list of index numbers.
+A class has up to about 150 students using the system at the same time. The admin confirmed this number, and it sizes the database plan.
+Campus connectivity is good enough for a page load and a small form submission.
+Students are physically in the classroom when the window is open. A student who cannot share location needs an admin override (FR-24).
+The system provides deterrence against remote access. It cannot prove a position, because location data comes from the student's own device (see section 6.1).
+3. Functional requirements
+Priority: Must is needed for the first lesson, Should by the second lesson, Could if time allows.
+3.1 Student access and sessions
+ID
+Requirement
+Priority
+FR-01
+The student opens the week link, which fixes the class and the week. A new student registers by typing the index number twice, a full name and the class code. A returning student enters the index number alone.
+Must
+FR-02
+An index number that is not yet registered opens the registration form. A wrong class code or an invalid index number format shows one generic message that does not reveal which classes exist.
+Must
+FR-03
+An index number is registered once. Entering it again with a different name (compared ignoring case and spacing) is blocked and flagged for the admin, so a classmate cannot sign in as someone else.
+Must
+FR-04
+A successful login creates a signed, httpOnly session cookie that expires when the week's window closes.
+Must
+FR-05
+Login attempts are rate limited per IP address and per index number.
+Must
+FR-06
+After sign-in the student lands on the week from the link they opened: title, opening and closing times with a live countdown, and its 1 or 2 activities with status and best score.
+Must
+3.2 Time window
+ID
+Requirement
+Priority
+FR-07
+Each week has an opening time and a closing time. The server clock decides, never the student's device.
+Must
+FR-08
+Activity content is sent to the browser only while the week is published and the window is open.
+Must
+FR-09
+The page submits the student's current answers automatically at closing time. The server accepts submissions up to 20 seconds after closing to cover network delay.
+Must
+FR-10
+The admin can extend the closing time in 10 minute steps or close the week early while students are working.
+Should
+FR-11
+Outside the window the student sees when the week opens or closed. Past scores stay visible.
+Must
+3.3 Geofencing
+ID
+Requirement
+Priority
+FR-12
+The admin sets a geofence per week: centre latitude and longitude, and radius in metres. A map picker and a "use my current location" button fill the centre.
+Must
+FR-13
+The geofence copies from the class default when a week is created and can be changed per week.
+Should
+FR-14
+The student's browser requests a high-accuracy position through the Geolocation API after a short explanation of why.
+Must
+FR-15
+The server computes the great-circle distance (haversine) between the reported position and the centre. Access is allowed only when distance is within the radius.
+Must
+FR-16
+A reading whose reported accuracy is worse than the limit (default 100 m, set by the admin) is rejected, and the student is asked to try again.
+Must
+FR-17
+Access is enforced at login and when an activity starts. Each submission is checked again. A failed check at submission does not discard the answers. The attempt is saved and flagged for admin review.
+Must
+FR-18
+A denied student sees the reason (outside the area, location permission off, accuracy too low) and, for the first case, their distance to the nearest 10 m.
+Must
+FR-19
+The admin can switch the geofence off for a week, for example a take-home week.
+Should
+FR-20
+Every location check is logged with result, distance, reported accuracy and time. Coordinates are stored rounded to 4 decimal places (about 11 m).
+Must
+3.4 Activities and scoring
+ID
+Requirement
+Priority
+FR-21
+A week holds 1 or 2 activities. Each has a title, instructions, a type, a configuration, an answer key and a maximum score.
+Must
+FR-22
+Launch types: Sorting (place cards in categories and judge each), Rating (rate items on scales and pick an action), Calculation and choice (numeric answers with tolerance and pick-one pairs). New types plug in without changing existing ones.
+Must
+FR-23
+Scoring runs on the server. Answer keys are never sent to the browser. The student sees the score and per-item feedback immediately after submitting.
+Must
+FR-24
+The admin can grant one student a geofence or time exception for one week, with a reason and an expiry. Every exception is logged.
+Must
+FR-25
+Each activity allows 2 attempts by default, and the best score counts. The admin can change this per activity.
+Should
+FR-26
+Numeric questions can use numbers generated from the index number, so neighbours get different values.
+Could
+3.5 Admin console
+ID
+Requirement
+Priority
+FR-27
+The admin signs in with email and password and multi-factor authentication. Only listed admin accounts reach the console.
+Must
+FR-28
+The admin creates classes, each with a class code to show on the board. The admin can review registered students, correct a name or index number, and merge duplicate registrations.
+Must
+FR-29
+The admin schedules a week: number, title, opening time, closing time, geofence, and a published switch. Saving a week creates its unique link with a Copy button. The admin can regenerate the link, and the old one then stops working.
+Must
+FR-30
+The admin builds or edits the week's activities from a form per type, and can preview them as a student would see them.
+Should
+FR-31
+The admin can duplicate a past week as a starting point for a new one.
+Could
+FR-32
+A live results table shows each student's best score per activity, total and percentage, refreshed every 5 seconds, with a count of students who have started and submitted.
+Must
+FR-33
+A student detail view shows every attempt, the answers, and the location check results, including flagged attempts.
+Should
+FR-34
+The admin downloads an Excel file for a week or a class with sheets: Summary, Attempts, Answers, Access log.
+Must
+4. Data requirements
+Supabase Postgres holds eight tables. A week owns at most two activities, and a student is identified only by the index number the student registers with.
+Table
+Key columns
+Notes
+classes
+id, name, join_code, default_lat, default_lng, default_radius_m
+One row per course offering. The default location seeds each new week.
+students
+class_id, index_number, name, name_key, registered_at
+Primary key (class_id, index_number). A row is created when the student registers. Index numbers are stored trimmed and uppercase. name_key is the name in lowercase without extra spaces, used to detect a different person claiming the same number.
+weeks
+id, class_id, number, title, opens_at, closes_at, published, link_token, geofence_enabled, center_lat, center_lng, radius_m, max_accuracy_m
+Unique (class_id, number). Times are timestamptz. link_token is a unique random string used in the week link. max_accuracy_m defaults to 100.
+activities
+id, week_id, position, type, title, instructions, config, answer_key, max_attempts, max_score
+position is 1 or 2 with a check constraint. Unique (week_id, position) enforces the cap. config and answer_key are jsonb.
+attempts
+id, activity_id, class_id, index_number, attempt_no, started_at, submitted_at, auto_submitted, answers, score, max_score, feedback, flagged, flag_reason
+Unique (activity_id, index_number, attempt_no). One row per submission.
+access_events
+id, class_id, week_id, index_number, event, allowed, reason, lat, lng, accuracy_m, distance_m, ip_hash, user_agent, created_at
+event is login, start or submit. Written for allowed and denied checks.
+overrides
+id, week_id, class_id, index_number, kind, reason, expires_at, created_by
+kind is geofence or time. Read on every access check.
+admins
+user_id, email
+Links Supabase Auth users to console access.
+Data rules
+Row Level Security is on for every table with no policy for the public (anon) role. Browsers never query the database directly.
+Student requests go through Next.js server code that uses the Supabase service role key. That key exists only in server environment variables.
+answer_key is read only by scoring code on the server.
+The cap of two activities per week is a database constraint, so no code path can exceed it.
+IP addresses are stored as salted hashes. Coordinates are rounded to 4 decimal places.
+Location rows in access_events are deleted 90 days after the course ends. Confirm this period with the university.
+The admin exports scores before the end of the semester. Database backups follow the Supabase plan in use.
+5. External interface and UI requirements
+The interface is white and black. It follows the look of the portfolio site: a white page, near-black text, a very wide display typeface for headings, thin grey body text with key words in bold black, light grey pill containers, and solid black pill buttons with an arrow.
+5.1 Visual language
+Element
+Requirement
+Colour
+White background, near-black text (about #0A0A0A), light grey fills (about #F5F5F5) for capsules and secondary buttons, hairline grey (about #E5E5E5) dividers. Values are estimates from the portfolio and are refined once its stylesheet is checked.
+Display type
+A wide, heavy grotesque for page titles and big numbers. A second line of a title may fade from black to mid grey, as in the portfolio hero. Syne or Unbounded from Google Fonts are placeholders until the portfolio's own font is confirmed.
+Body type
+A light-weight sans in grey. Important words, names and values are bold black.
+Buttons
+Primary: solid black pill with white text and a trailing arrow. Secondary: light grey pill. Tertiary: plain grey text link.
+Navigation
+A light grey capsule holding 3 to 4 text links, with one black pill action at the right.
+Numbers
+Scores, countdowns and counts use the display face at large size with a small uppercase grey label under them.
+Surfaces
+Flat. Hairline borders, generous white space, soft shadow only on raised cards. No gradients except the title fade.
+Colour for meaning
+Black and white carry the design. Correct and incorrect feedback also use a small green or red mark, and always add a text label, so meaning never depends on colour.
+Motion
+Short fades and slides under 200 ms. Everything respects the reduced motion setting.
+5.2 Screens
+Screen
+Who
+Contents
+Login
+Student
+Large title, one index number field, black pill Continue button. A new index number opens a short registration: index number typed twice, full name and class code.
+Location check
+Student
+A card with the state: asking permission, checking, allowed, or denied with the reason and distance. A retry button and a short note on enabling location.
+This week
+Student
+Week title, countdown to closing in display numerals, one card per activity with status and best score.
+Activity
+Student
+Instructions, the activity itself, a visible countdown, and a Submit pill. Auto-submits at closing time.
+Result
+Student
+Large score, per-item feedback with reasons, and a button for another attempt when one remains.
+Admin sign in
+Admin
+Email, password, multi-factor code.
+Live results
+Admin
+Week selector, counters (started, submitted), results table, Extend +10 min, Close now, Download Excel.
+Classes and students
+Admin
+Class list with class codes, table of registered students, correct and merge tools.
+Week scheduler
+Admin
+Title, window pickers, map with draggable centre and radius slider, accuracy limit, published switch, week link with a Copy button.
+Activity builder
+Admin
+A form per activity type, preview as student, answer key editor.
+Student detail
+Admin
+Attempts, answers, location check history, flagged items, exception form.
+5.3 Usability and accessibility
+The student flow is mobile first, single column, with touch targets of at least 44 px.
+Text contrast meets WCAG 2.1 AA. Light grey body text must still reach 4.5:1 on white.
+Every control works by keyboard with a visible focus ring. Drag and drop has a tap or keyboard alternative.
+Error messages say what happened and what to do next.
+The first student page loads under 300 KB of JavaScript so it opens quickly on mobile data.
+The map picker loads only on the admin scheduler page.
+6. Non-functional requirements
+6.1 Security and the limits of geofencing
+The position a student reports comes from their own device. A student with a location-spoofing app or a modified browser can fake it, so the geofence deters casual remote access and does not prove presence. The system reduces the risk with these measures:
+The server, never the browser, decides whether a position is inside the radius.
+Readings with poor accuracy are rejected (FR-16).
+The position is checked at login, at activity start and at submission, and every result is logged for review (FR-17, FR-20).
+Submissions from outside the area are flagged in the admin console.
+The class code, written on the board at the start of the lesson, is required at registration, so a remote student cannot register without it. The admin can change the code at any time.
+Indoor accuracy varies. Phones usually report 5 to 30 m. Laptops often rely on Wi-Fi positioning and can be off by hundreds of metres. Set the radius to cover the whole building, 100 m or more, and test it from the back row of the classroom before the first lesson.
+General security rules:
+HTTPS everywhere. Session cookies are httpOnly, Secure and SameSite=Lax. A week link carries a random token of 12 characters that cannot be guessed. The link opens the sign-in page only. Time window, geofence and class code still apply to everyone who opens it.
+Every input is validated on the server with a schema. Admin changes also check the request origin.
+Secrets live in server environment variables only. The service role key never reaches the browser.
+Answer keys never appear in any response sent to a student.
+Admin accounts require multi-factor authentication.
+Login rate limits count per index number (10 attempts per 10 minutes). The per-IP limit is set high, because a whole class shares one campus network address.
+6.2 Privacy
+Collected data: index number, name the student enters, rounded coordinates at each check, a hashed IP address and the browser user agent. The purpose is access control and attendance evidence.
+A plain notice appears before the browser asks for location. It states what is collected, why, and for how long.
+Only the admin can read location data.
+Retention: location records are removed 90 days after the course ends. Scores follow the department's record rules.
+Check the design against the Data Protection Act, 2012 (Act 843) and university policy before the first lesson.
+6.3 Performance and capacity
+Measure
+Target
+Concurrent students
+150
+Burst at window opening
+150 logins within 2 minutes without errors
+Submission response
+95% under 500 ms, excluding a cold start
+First page load on campus Wi-Fi
+Under 3 seconds
+Admin results refresh
+Every 5 seconds, one query per refresh
+6.4 Reliability
+The system should have no planned downtime during a window.
+The student's answers are kept in the browser while they work. A failed submission retries automatically and the student sees its state.
+Submitting is idempotent. A double tap or retry cannot create a duplicate attempt.
+The countdown uses the server clock offset measured at page load.
+A scheduled Supabase backup and an Excel export after each lesson protect the scores.
+6.5 Maintainability and compatibility
+Each activity type is a module with a configuration schema, a student renderer and a server scorer. A new weekly activity of an existing type needs configuration only.
+Automated tests cover the haversine distance, window checks, attempt limits and every scorer.
+Supported browsers: the two latest versions of Chrome, Edge, Firefox and Safari, and Chrome on Android and Safari on iOS.
+7. System architecture
+Next.js on Vercel serves the interface and a thin server layer. Supabase stores the data. Every student request passes through server code that checks session, window and location before it touches the database.
+Layer
+Choice
+Responsibility
+Interface
+Next.js App Router, React, TypeScript, Tailwind CSS
+Pages, forms, countdown, activity renderers
+Server logic
+Next.js Route Handlers and Server Actions
+Session, window check, geofence check, attempt limits, scoring, Excel export
+Database
+Supabase Postgres with Row Level Security
+All data in section 4. Reached only from server code with the service role key.
+Admin sign-in
+Supabase Auth
+Email, password and multi-factor authentication
+Map picker
+Leaflet with OpenStreetMap tiles
+Admin scheduler page only
+Validation
+Zod schemas
+Every request body and every activity configuration
+Excel
+exceljs in a server route
+Summary, Attempts, Answers and Access log sheets
+Hosting
+Vercel and Supabase cloud
+Pick the Supabase region nearest Ghana and test latency from campus.
+Every request to start or submit an activity runs the same ordered checks. The first failure stops the request and returns its reason.
+The session cookie is valid and belongs to a registered student of this class.
+The week is published and the window is open, or a time exception applies.
+The reported position is accurate enough and inside the radius, or a geofence exception applies, or the geofence is off.
+The student has attempts left on this activity.
+For a start, the server sends the activity without its answer key. For a submit, the server scores it, saves the attempt and returns the result.
+
+architecture · 3 parts, 5 server checks
+Students and the admin talk only to the Next.js server. The server alone talks to Supabase.
+8. Delivery plan, acceptance and risks
+Release 1 goes live before the lesson on Friday 27 November. Release 2 follows before the lesson on 4 December. The dates assume Friday lessons on 27 November and 4, 11 and 18 December.
+
+timeline · 4 lessons, 2 releases
+Release 1 covers registration, week links, login, window, geofence, two Week 1 activities, scores and Excel export. Release 2 adds live extend and close, flagged review, student detail, exceptions and the activity builder.
+8.1 Acceptance criteria
+#
+Test
+Passes when
+1
+A registered student inside the radius completes both activities
+The score shows in under 1 second with feedback
+2
+A student 500 m outside the radius tries to start
+Access is denied and the distance is shown
+3
+A student opens the week before and after the window
+No activity content appears in any response
+4
+A submission arrives 10 seconds and 30 seconds after closing
+The first is accepted and the second is rejected
+5
+The browser's network responses and scripts are inspected
+No answer key appears
+6
+The Excel export is opened
+It has four sheets and totals that match the console
+7
+The admin tries to add a third activity to a week
+The system refuses
+8
+150 simulated logins arrive within 2 minutes
+All complete without errors
+8.2 Risks
+Risk
+Effect
+Mitigation
+Indoor location is inaccurate
+Students inside the room are blocked
+Radius of 100 m or more, accuracy limit, an on-site test, exceptions, and the option to switch the geofence off in class
+Students fake their location
+Remote access to activities
+Server-side checks, logs, flagged submissions, optional class code
+Students mistype or share index numbers
+Scores split across two records, or one student answers for another
+Index number typed twice, name matching on every sign-in, admin correct and merge tools, geofence, time window, attempt log, class code
+Campus Wi-Fi is slow or drops
+Lost answers
+Light pages, answers kept in the browser, automatic retry
+Release 1 is not ready on 27 November
+Lesson 1 has no platform
+Run Lesson 1 on the earlier prototype and move to the new platform on 4 December
+Free hosting limits are reached
+Errors during a window
+Load test before Lesson 1 and check plan limits
+8.3 Open questions
+☐ How many classes will use the platform? A class size of about 150 is confirmed.
+☐ What index number format applies (for example 7 digits)? The system will validate against it.
+☐ Which two of the three prototype activities run in Week 1?
+☐ Should a failed location check at submission only flag the attempt (as in FR-17) or block it?
+☐ Should a denied student see their distance from the room (as in FR-18)?
+☐ Is 90 days after the course the right retention period for location records?
+☐ What is the platform called, and is there a domain name to use for the week links?

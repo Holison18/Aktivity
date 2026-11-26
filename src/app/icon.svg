@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" fill="none">
+  <defs>
+    <linearGradient id="aktivity-icon-bg" x1="4" y1="2" x2="32" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2b88ff" />
+      <stop offset="100%" stop-color="#1565e6" />
+    </linearGradient>
+  </defs>
+  <rect width="36" height="36" rx="10" fill="url(#aktivity-icon-bg)" />
+  <rect x="0.75" y="0.75" width="34.5" height="34.5" rx="9.25" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5" />
+  <path
+    d="M9.5 26.5 18 9l8.5 17"
+    stroke="#ffffff"
+    stroke-width="3.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="18" cy="23.2" r="2.7" fill="#f7dc6f" />
+</svg>

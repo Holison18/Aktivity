@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aktivity Admin</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main style="max-width: 960px">
+  <header class="top"><b>Aktivity admin</b><span class="timer" id="status"></span></header>
+  <div id="app"></div>
+</main>
+<script>
+const app = document.getElementById("app");
+let pw = sessionStorage.getItem("adm") || "";
+let week = null, timer = null;
+
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, ""); else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) e.append(kid.nodeType ? kid : document.createTextNode(kid));
+  return e;
+}
+async function call(path, body) {
+  const res = await fetch(path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", "x-admin": pw }, body: body ? JSON.stringify(body) : undefined });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Request failed");
+  return res;
+}
+
+function login(msg) {
+  clearInterval(timer);
+  const i = h("input", { type: "password", id: "ap" });
+  app.replaceChildren(h("h1", {}, "Instructor sign in"), h("label", { for: "ap" }, "Admin password"), i,
+    h("div", { class: "err" }, msg || ""),
+    h("p", {}, h("button", { class: "btn", onclick: () => { pw = i.value; sessionStorage.setItem("adm", pw); load(); } }, "Sign in")));
+  i.focus();
+}
+
+let formBuilt = false;
+async function load() {
+  let s;
+  try { s = await (await call("/api/admin/state" + (week ? "?week=" + week : ""))).json(); }
+  catch (e) { return login(e.message); }
+  week = s.view.week;
+  const w = s.window;
+  document.getElementById("status").textContent = w.state === "open" ? (w.forced ? "Open (forced)" : "Session open") : "Session closed";
+  const cfg = s.config;
+  const set = async patch => { await call("/api/admin/config", patch); week = patch.week || week; load(); };
+  const codeIn = h("input", { value: cfg.classCode, style: "width:140px" });
+  const ctl = h("div", { class: "row", style: "margin-bottom:12px" },
+    h("label", { style: "margin:0" }, "Week "), h("select", { style: "width:auto", onchange: e => set({ week: Number(e.target.value) }) },
+      s.weeks.map(n => h("option", { value: n, selected: n === cfg.week }, n))),
+    h("button", { class: "btn alt", onclick: () => set({ forceOpen: !cfg.forceOpen }) }, cfg.forceOpen ? "Stop forced open" : "Force open now"),
+    h("button", { class: "btn alt", onclick: () => set({ extendMinutes: cfg.extendMinutes + 10 }) }, "Extend +10 min (now +" + cfg.extendMinutes + ")"),
+    h("button", { class: "btn alt", onclick: () => set({ extendMinutes: 0 }) }, "Reset extension"),
+    h("label", { style: "margin:0" }, "Class code "), codeIn,
+    h("button", { class: "btn alt", onclick: () => set({ classCode: codeIn.value }) }, "Save code"));
+  const v = s.view;
+  const tbl = h("div", { class: "overflow" }, h("table", {},
+    h("thead", {}, h("tr", {}, h("th", {}, "Index number"), h("th", {}, "Name"), v.acts.map(a => h("th", { class: "n" }, a.title + " (/" + a.maxScore + ")")), h("th", { class: "n" }, "Total (/" + v.max + ")"), h("th", { class: "n" }, "%"))),
+    h("tbody", {}, v.rows.map(r => h("tr", {}, h("td", {}, r.index), h("td", {}, r.name), v.acts.map(a => h("td", { class: "n" }, r.best[a.id] ?? "")), h("td", { class: "n" }, r.total), h("td", { class: "n" }, r.pct))))));
+  app.replaceChildren(
+    ctl,
+    h("div", { class: "row", style: "justify-content:space-between; margin-bottom:8px" },
+      h("span", { class: "muted" }, v.rows.length + " students with submissions. Updates every 5 seconds. Best attempt counts."),
+      h("button", { class: "btn", onclick: download }, "Download Excel")),
+    tbl);
+  clearInterval(timer);
+  timer = setInterval(() => { if (!document.activeElement || document.activeElement.tagName !== "INPUT") load(); }, 5000);
+}
+async function download() {
+  const res = await call("/api/admin/export?week=" + week);
+  const blob = await res.blob();
+  const a = h("a", { href: URL.createObjectURL(blob), download: "scores_week" + week + "_" + new Date().toISOString().slice(0, 10) + ".xlsx" });
+  document.body.append(a); a.click(); a.remove();
+}
+pw ? load() : login();
+</script>
+</body>
+</html>
