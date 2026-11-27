@@ -214,7 +214,7 @@ export default function StudentApp(props: WeekProps) {
 
   function onLoginSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!index.trim()) return setError("Type your index number.");
+    if (!index.trim()) return setError("Type your index or reference number.");
     if (needsLocation()) {
       setPending({ kind: "login" });
       setLoc({ status: "intro" });
@@ -346,8 +346,9 @@ export default function StudentApp(props: WeekProps) {
           {screen === "login" ? (
             <form onSubmit={onLoginSubmit} className="space-y-4" noValidate>
               <div>
-                <label className="field-label" htmlFor="index">Index number</label>
-                <input id="index" className="field text-lg tracking-wide" inputMode="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} value={index} onChange={(e) => setIndex(e.target.value)} autoFocus />
+                <label className="field-label" htmlFor="index">Index or reference number</label>
+                <input id="index" className="field text-lg tracking-wide" inputMode="numeric" autoComplete="off" spellCheck={false} value={index} onChange={(e) => setIndex(e.target.value)} autoFocus />
+                <p className="mt-1.5 text-sm text-muted">Use your student index number, or your reference number if you don&apos;t have one yet.</p>
               </div>
               {error && <p className="notice notice-bad" role="alert">{error}</p>}
               <button className="btn btn-primary w-full sm:w-auto" disabled={busy} aria-busy={busy}>
@@ -357,11 +358,11 @@ export default function StudentApp(props: WeekProps) {
           ) : (
             <form onSubmit={onRegisterSubmit} className="space-y-4" noValidate>
               <p className="notice">
-                <strong>{index.toUpperCase()}</strong> is not registered for this class yet. Register once; next time you only need your index number.
+                <strong>{index.toUpperCase()}</strong> is not registered for this class yet. Register once; next time you only need your index or reference number.
               </p>
               <div>
-                <label className="field-label" htmlFor="index2">Type your index number again</label>
-                <input id="index2" className="field text-lg tracking-wide" autoComplete="off" autoCapitalize="characters" spellCheck={false} value={reg.indexConfirm} onChange={(e) => setReg({ ...reg, indexConfirm: e.target.value })} onPaste={(e) => e.preventDefault()} autoFocus />
+                <label className="field-label" htmlFor="index2">Type your index or reference number again</label>
+                <input id="index2" className="field text-lg tracking-wide" inputMode="numeric" autoComplete="off" spellCheck={false} value={reg.indexConfirm} onChange={(e) => setReg({ ...reg, indexConfirm: e.target.value })} onPaste={(e) => e.preventDefault()} autoFocus />
               </div>
               <div>
                 <label className="field-label" htmlFor="name">Full name</label>
@@ -374,7 +375,7 @@ export default function StudentApp(props: WeekProps) {
               {error && <p className="notice notice-bad" role="alert">{error}</p>}
               <div className="flex flex-wrap items-center gap-3">
                 <button className="btn btn-primary" disabled={busy} aria-busy={busy}><Busy busy={busy} label="Register and continue" busyLabel="Registering…" arrow /></button>
-                <button type="button" className="btn-link" onClick={() => { setRegistering(false); setError(null); setScreen("login"); }}>Use a different index number</button>
+                <button type="button" className="btn-link" onClick={() => { setRegistering(false); setError(null); setScreen("login"); }}>Use a different number</button>
               </div>
             </form>
           )}

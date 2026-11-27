@@ -15,7 +15,7 @@ export function cleanName(raw: string): string {
   return String(raw ?? "").normalize("NFKC").trim().replace(/\s+/g, " ");
 }
 
-export const DEFAULT_INDEX_PATTERN = "^\\d{7}$";
+export const DEFAULT_INDEX_PATTERN = "^\\d{7,10}$";
 
 export function indexPattern(): RegExp {
   const src = process.env.INDEX_NUMBER_PATTERN || DEFAULT_INDEX_PATTERN;

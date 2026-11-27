@@ -3,7 +3,7 @@ import { checkGeofence, haversineMeters, roundCoord, roundTo10 } from "@/lib/geo
 import { canStart, canSubmit, extendClose, windowState, SUBMIT_GRACE_MS, accraLocalToIso, isoToAccraLocal } from "@/lib/window";
 import { attemptsLeft, bestScore, nextAttemptNo, submissionDecision } from "@/lib/attempts";
 import { evaluate, fillTemplate } from "@/lib/expr";
-import { nameKey, normalizeIndex, isValidIndex, sameClassCode } from "@/lib/identity";
+import { DEFAULT_INDEX_PATTERN, nameKey, normalizeIndex, isValidIndex, sameClassCode } from "@/lib/identity";
 import { randomToken, signSession, verifySession, sign, verify, hashIp } from "@/lib/tokens";
 
 describe("haversine distance (FR-15)", () => {
@@ -160,9 +160,14 @@ describe("identity rules (FR-02, FR-03, section 4)", () => {
     expect(nameKey("  Ama   K.  Mensah ")).toBe(nameKey("ama k. mensah"));
     expect(nameKey("Ama Mensah")).not.toBe(nameKey("Kofi Mensah"));
   });
-  it("validates against the configured pattern (default 7 digits)", () => {
-    expect(isValidIndex("1234567", /^\d{7}$/)).toBe(true);
-    expect(isValidIndex("123456", /^\d{7}$/)).toBe(false);
+  it("validates against the configured pattern (default 7 to 10 digits)", () => {
+    const def = new RegExp(DEFAULT_INDEX_PATTERN);
+    expect(isValidIndex("1234567", def)).toBe(true);
+    expect(isValidIndex("12345678", def)).toBe(true);
+    expect(isValidIndex("1234567890", def)).toBe(true);
+    expect(isValidIndex("123456", def)).toBe(false);
+    expect(isValidIndex("12345678901", def)).toBe(false);
+    expect(isValidIndex("AB123456", def)).toBe(false);
     expect(isValidIndex("12345678", /^\d{7}$/)).toBe(false);
   });
   it("compares class codes ignoring case and spaces", () => {

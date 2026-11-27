@@ -15,7 +15,7 @@ Priority: **M** = Must (lesson 1, 27 Nov), **S** = Should (lesson 2, 4 Dec), **C
 
 | Question | Decision used in the build |
 |---|---|
-| Index number format | Configurable regex `INDEX_NUMBER_PATTERN`, default `^\d{7}$` (answer from the admin, 23 Nov) |
+| Index number format | Configurable regex `INDEX_NUMBER_PATTERN`, default `^\d{7,10}$` (7–10 digits to accept index and reference numbers) |
 | Which prototype activities run in week 1 | All three are seeded as templates; the admin picks 2 per week |
 | Failed location check at submit: flag or block | Flag, as written in FR-17 |
 | Show distance to a denied student | Yes, rounded to 10 m, as written in FR-18 |

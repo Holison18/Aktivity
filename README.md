@@ -62,7 +62,7 @@ node scripts/load-test.mjs https://your-site /w/<token> <CLASSCODE> <centre-lat>
    - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
    - `SESSION_SECRET` (32+ random chars; required in production)
    - `IP_HASH_SALT` (recommended 32+ random chars)
-   - `INDEX_NUMBER_PATTERN` (e.g. `^\d{7}$`)
+   - `INDEX_NUMBER_PATTERN` (e.g. `^\d{7,10}$`)
    - `NEXT_PUBLIC_APP_NAME` (e.g. `Aktivity`)
    - `NEXT_PUBLIC_SITE_URL` (your production `https://` URL, e.g. `https://your-app.vercel.app` — optional; if omitted, week links auto-detect the request host)
    - `RATE_LIMIT_PER_INDEX` (`10`) and `RATE_LIMIT_PER_IP` (`1500`)

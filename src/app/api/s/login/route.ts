@@ -9,8 +9,8 @@ import {
   activeOverrides, denial, geoCheck, isRateLimited, logEvent, requestMeta, sessionCookie, sessionExpiryFor, weekByToken,
 } from "@/lib/server/student";
 
-// One message for a wrong class code or a badly formed index number, so it reveals nothing (FR-02).
-const GENERIC = { error: "generic", message: "We could not sign you in. Check your index number and the class code on the board, then try again." };
+// One message for a wrong class code or a badly formed index/reference number, so it reveals nothing (FR-02).
+const GENERIC = { error: "generic", message: "We could not sign you in. Check your index or reference number and the class code on the board, then try again." };
 
 export async function POST(req: NextRequest) {
   const body = await readBody(req, loginBody);
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   if (register) {
     if (normalizeIndex(register.indexConfirm) !== index) {
       await logEvent({ ...base, allowed: false, reason: "index_mismatch" });
-      return json({ error: "confirm", message: "The two index numbers do not match. Type your index number again in both fields." }, 400);
+      return json({ error: "confirm", message: "The two numbers do not match. Type your index or reference number again in both fields." }, 400);
     }
     if (!sameClassCode(register.classCode, week.join_code)) {
       await logEvent({ ...base, allowed: false, reason: "bad_class_code" });
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     const others = must(await db().from("students").select("name_key").eq("index_number", index), "check index") as { name_key: string }[];
     if (others.some((o) => o.name_key !== key)) {
       await logEvent({ ...base, allowed: false, reason: "name_mismatch" });
-      return json({ error: "taken", message: "This index number is already registered under a different name. If it is yours, ask your lecturer to check it." }, 409);
+      return json({ error: "taken", message: "This index or reference number is already registered under a different name. If it is yours, ask your lecturer to check it." }, 409);
     }
     if (!student) {
       const ins = await db().from("students").insert({ class_id: week.class_id, index_number: index, name, name_key: key }).select("index_number, name, name_key").single();
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       student = ins.data ?? (must(await db().from("students").select("index_number, name, name_key").eq("class_id", week.class_id).eq("index_number", index).single(), "reload student") as typeof student);
       if (student && student.name_key !== key) {
         await logEvent({ ...base, allowed: false, reason: "name_mismatch" });
-        return json({ error: "taken", message: "This index number is already registered under a different name. If it is yours, ask your lecturer to check it." }, 409);
+        return json({ error: "taken", message: "This index or reference number is already registered under a different name. If it is yours, ask your lecturer to check it." }, 409);
       }
     }
   }

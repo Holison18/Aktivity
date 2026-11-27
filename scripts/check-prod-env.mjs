@@ -54,7 +54,7 @@ const checks = [
         return false;
       }
     },
-    hint: "Valid regular expression (defaults to ^\\d{7}$).",
+    hint: "Valid regular expression (defaults to ^\\d{7,10}$).",
   },
   {
     name: "NEXT_PUBLIC_SITE_URL",
