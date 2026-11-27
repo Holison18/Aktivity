@@ -150,7 +150,10 @@ export default function StudentApp(props: WeekProps) {
     };
   }, [screen, weekStateValue, loadWeek]);
 
-  const needsLocation = (w?: WeekData | null) => (w ? w.week.geofenceEnabled && w.week.state === "open" : props.geofenceEnabled && props.state === "open" && serverNow() >= Date.parse(props.opensAt) && serverNow() < Date.parse(props.closesAt));
+  const needsLocation = (w?: WeekData | null) =>
+    w
+      ? w.week.geofenceEnabled && w.week.state === "open"
+      : props.geofenceEnabled && props.state !== "unpublished" && serverNow() >= Date.parse(props.opensAt) && serverNow() < Date.parse(props.closesAt);
 
   // --------------------------------------------------------------- location
   function handleDenial(d: ApiError, p: Pending) {
@@ -196,7 +199,13 @@ export default function StudentApp(props: WeekProps) {
       return;
     }
     if (r.data.error === "location") {
-      if (r.data.reason === "no_position" && !pos) return checkLocationThen({ kind: "login" });
+      if (r.data.reason === "no_position" && !pos) {
+        // Show the intro prompt instead of calling getCurrentPosition after await (iOS blocks geolocation without a direct tap).
+        setPending({ kind: "login" });
+        setLoc({ status: "intro" });
+        setScreen("locate");
+        return;
+      }
       return handleDenial(r.data, { kind: "login" });
     }
     setError(r.data.message ?? "Something went wrong. Try again.");
